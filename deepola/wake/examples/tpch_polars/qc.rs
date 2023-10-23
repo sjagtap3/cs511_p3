@@ -56,7 +56,7 @@ order by
         ("customer".into(), 
         vec![
             "c_custkey", "c_name",
-            "c_acctbal", "c_name"]
+            "c_acctbal"]
         ),
     ]);
 
@@ -66,13 +66,13 @@ order by
     let orders_csvreader_node = 
         build_csv_reader_node("orders".into(), &tableinput, &table_columns);
     let customers_csvreader_node = 
-        build_csv_reader_node("customers".into(), &tableinput, &table_columns);
+        build_csv_reader_node("customer".into(), &tableinput, &table_columns);
 
     // WHERE Node
     let where_node = AppenderNode::<DataFrame, MapAppender>::new()
         .appender(MapAppender::new(Box::new(|df: &DataFrame| {
             let a = df.column("o_orderdate").unwrap();
-            let mask = a.gt_eq("1993-10-01").unwrap() & a.lt("1994-01-01") ;
+            let mask = a.gt_eq("1993-10-01").unwrap() & a.lt("1994-01-01").unwrap() ;
             df.filter(&mask).unwrap()
         })))
         .build();
@@ -93,7 +93,6 @@ order by
         .appender(MapAppender::new(Box::new(|df: &DataFrame| {
             let extended_price = df.column("l_extendedprice").unwrap();
             let discount = df.column("l_discount").unwrap();
-            let tax = df.column("l_tax").unwrap();
             let columns = vec![
                 Series::new(
                     "disc_price",
@@ -132,18 +131,17 @@ order by
             ];
             DataFrame::new(columns)
                 .unwrap()
-                .sort(&["revenue"], descending)
+                .sort(&["revenue"],vec![false])
                 .unwrap()
         })))
         .build();
 
     // Connect nodes with subscription
-    where_node.subscribe_to_node(&lineitem_csvreader_node, 0);
-    hash_join_node1.subscribe_to_node(&where_node, 0); // Left Node
-    hash_join_node1.subscribe_to_node(&orders_csvreader_node, 1); // Right Node
-    hash_join_node2.subscribe_to_node(&where_node, 0); // Left Node
-    hash_join_node2.subscribe_to_node(&customers_csvreader_node, 2); // Right Node
-    expression_node.subscribe_to_node(&hash_join_node1, 0);
+    where_node.subscribe_to_node(&orders_csvreader_node, 0);
+    hash_join_node1.subscribe_to_node(&where_node, 1); // Right Node
+    hash_join_node1.subscribe_to_node(&customers_csvreader_node, 0); // Left Node
+    hash_join_node2.subscribe_to_node(&hash_join_node1, 1); // Right Node
+    hash_join_node2.subscribe_to_node(&lineitem_csvreader_node, 0); // Left Node
     expression_node.subscribe_to_node(&hash_join_node2, 0);
     groupby_node.subscribe_to_node(&expression_node, 0);
     select_node.subscribe_to_node(&groupby_node, 0);

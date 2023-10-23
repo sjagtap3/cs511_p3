@@ -9,10 +9,10 @@ use wake::graph::*;
 // TODO: UNCOMMENT THE IMPORT STATEMENTS BELOW AS YOU IMPLEMENT THESE QUERIES.
 mod q1;
 mod q14;
-// mod qa;
-// mod qb;
-// mod qc;
-// mod qd;
+mod qa;
+mod qb;
+mod qc;
+mod qd;
 mod tests;
 mod utils;
 
@@ -21,7 +21,7 @@ fn main() {
     // 0: Whether to run query or test. Required. query/test.
     // 1: Query Number. Required.
     // 2: Scale of the TPC-H Dataset. Optional. Default: 1.
-    // 3: Directory containing the dataset. Optional. Default: resources/tpc-h/data/scale=1/partition=10/
+    // 3: Directory containing the dataset. Optional. Default: cs511_p3/resources/tpc-h/data/scale=1/partition=10/
 
     env_logger::Builder::from_default_env()
         .format_timestamp_micros()
@@ -38,6 +38,7 @@ fn main() {
         ),
     }
 }
+
 
 fn run_query(args: Vec<String>) {
     if args.len() == 0 {
@@ -71,10 +72,10 @@ pub fn get_query_service(
     let query_service = match query_no {
         "q1" => q1::query(table_input, output_reader),
         "q14" => q14::query(table_input, output_reader),
-        // "qa" => qa::query(table_input, output_reader),
-        // "qb" => qb::query(table_input, output_reader),
-        // "qc" => qc::query(table_input, output_reader),
-        // "qd" => qd::query(table_input, output_reader),
+        "qa" => qa::query(table_input, output_reader),
+        "qb" => qb::query(table_input, output_reader),
+        "qc" => qc::query(table_input, output_reader),
+        "qd" => qd::query(table_input, output_reader),
         _ => panic!("Invalid Query Parameter"),
     };
     query_service
