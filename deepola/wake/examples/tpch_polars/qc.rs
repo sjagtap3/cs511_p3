@@ -131,7 +131,7 @@ order by
             ];
             DataFrame::new(columns)
                 .unwrap()
-                .sort(&["revenue"],vec![false])
+                .sort(&["revenue"],vec![true])
                 .unwrap()
         })))
         .build();
