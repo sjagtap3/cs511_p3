@@ -8,7 +8,6 @@ use glob::glob;
 use std::collections::HashMap;
 use std::error::Error;
 use std::time::Instant;
-use std::fs;
 
 #[derive(Debug)]
 pub struct TableInput {
@@ -38,7 +37,10 @@ pub fn load_tables(directory: &str, scale: usize) -> HashMap<String, TableInput>
     ];
     let mut table_input = HashMap::new();
     for tpch_table in tpch_tables {
-        let mut input_files = vec![];   
+        let mut input_files = vec![];
+	let directory = "../../resources/tpc-h/data/scale=1/partition=10";	
+
+        
         for entry in glob(&format!("{}/{}.tbl*", directory, tpch_table))
             .expect("Failed to read glob pattern")
         {

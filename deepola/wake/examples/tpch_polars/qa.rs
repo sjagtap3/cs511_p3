@@ -9,7 +9,6 @@ use polars::series::Series;
 use wake::graph::*;
 use wake::polars_operations::*;
 
-use polars::export::chrono::NaiveDate;
 use std::collections::HashMap;
 
 /*select
@@ -21,12 +20,6 @@ where
 	and l_shipdate < date '1994-01-01' + interval '1' year
 */
 
-// Helper function to compute number of days since epoch
-pub fn days_since_epoch(year: i32, month: u32, day: u32) -> i32 {
-    let given_date = NaiveDate::from_ymd(year, month, day);
-    let epoch_date = NaiveDate::from_ymd(1970,1,1);
-    NaiveDate::signed_duration_since(given_date, epoch_date).num_days().try_into().unwrap()
-}
 
 
 pub fn query(
@@ -51,8 +44,6 @@ pub fn query(
     let where_node = AppenderNode::<DataFrame, MapAppender>::new()
         .appender(MapAppender::new(Box::new(|df: &DataFrame| {
             let a = df.column("l_shipdate").unwrap();
-            let var_date_1 = days_since_epoch(1994,1,1);
-            let var_date_2 = days_since_epoch(1995,1,1);
             let mask = a.gt_eq("1994-01-01").unwrap() & a.lt("1995-01-01").unwrap();
             let result = df.filter(&mask).unwrap();
             result
@@ -77,10 +68,10 @@ pub fn query(
         .accumulator(agg_accumulator)
         .build();
 
+
      // SELECT Node
      let select_node = AppenderNode::<DataFrame, MapAppender>::new()
      .appender(MapAppender::new(Box::new(|df: &DataFrame| {
-         // Compute AVG from SUM/COUNT.
          let columns = vec![
              Series::new("revenue", df.column("disc_price").unwrap())
          ];
@@ -101,7 +92,7 @@ pub fn query(
 
     // Add all the nodes to the service
     let mut service = ExecutionService::<polars::prelude::DataFrame>::create();
-    //service.add(select_node);
+    service.add(select_node);
     service.add(groupby_node);
     service.add(expression_node);
     service.add(where_node);

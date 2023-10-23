@@ -137,6 +137,18 @@ pub fn query(
         .accumulator(sum_accumulator)
         .build();
 
+    // SELECT Node
+     let select_node = AppenderNode::<DataFrame, MapAppender>::new()
+     .appender(MapAppender::new(Box::new(|df: &DataFrame| {
+         let columns = vec![
+             Series::new("revenue", df.column("disc_price").unwrap())
+         ];
+         DataFrame::new(columns)
+             .unwrap()
+     })))
+     .build();
+
+
     // Connect nodes with subscription
     lineitem_where_node.subscribe_to_node(&lineitem_csvreader_node, 0);
     hash_join_node.subscribe_to_node(&lineitem_where_node, 0); // Left Node
@@ -144,9 +156,10 @@ pub fn query(
     where_node.subscribe_to_node(&hash_join_node, 0);
     expression_node.subscribe_to_node(&where_node, 0);
     groupby_node.subscribe_to_node(&expression_node, 0);
+    select_node.subscribe_to_node(&groupby_node,0);
 
     // Output reader subscribe to output node.
-    output_reader.subscribe_to_node(&groupby_node, 0);
+    output_reader.subscribe_to_node(&select_node, 0);
 
     // Add all the nodes to the service
     let mut service = ExecutionService::<polars::prelude::DataFrame>::create();
@@ -157,5 +170,6 @@ pub fn query(
     service.add(lineitem_where_node);
     service.add(part_csvreader_node);
     service.add(lineitem_csvreader_node);
+    service.add(select_node);
     service
 }
