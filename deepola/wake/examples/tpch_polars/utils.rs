@@ -38,7 +38,6 @@ pub fn load_tables(directory: &str, scale: usize) -> HashMap<String, TableInput>
     let mut table_input = HashMap::new();
     for tpch_table in tpch_tables {
         let mut input_files = vec![];
-	let directory = "../../resources/tpc-h/data/scale=1/partition=10";	
 
         
         for entry in glob(&format!("{}/{}.tbl*", directory, tpch_table))
